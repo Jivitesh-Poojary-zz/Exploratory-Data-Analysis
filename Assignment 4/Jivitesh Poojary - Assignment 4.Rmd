@@ -1,0 +1,83 @@
+---
+title: "EDA - Assignment 4"
+author: "Jivitesh Poojary"
+date: "February 14, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Answer 1
+
+Q1. Univariate analysis. Find the total score for each country (adding up the standardized scores for all four questions) and display the results in a table or graph.
+
+The table is provided below.
+
+```{r echo=FALSE}
+library(ggplot2)
+library(broom)
+library(tidyr)
+library(GGally)
+
+prcSurvey <- read.csv('Pew Research - Final2.csv', header=TRUE)
+prcSurvey$SumOfScore <- prcSurvey$Birthplace + prcSurvey$Language	+ 
+  prcSurvey$Religion + prcSurvey$Customs
+prcSurvey
+
+```
+
+\newpage
+
+## Answer 2
+
+Q2.  Bivariate analysis. Use ggpairs() in the GGally library to create a scatterplot matrix. There should be 4-choose-2 = 6 pairs of variables plotted. Identify which of these six pairs are strongly related, and which are weakly related.
+
+From the plot below we can say the following:
+
+Strongly related pairs:
+- 0.806 :Religion - Birthplace, 0.754 :Customs - Birthplace, 0.739 :Customs - Religion
+
+Weakly related pairs:
+- 0.0202 :Customs - Language, 0.0521 :Religion - Language, 0.0713 :Language - Birthplace
+
+```{r echo=FALSE}
+ggpairs(prcSurvey, columns = c("Birthplace","Language","Religion","Customs"))
+```
+
+\newpage
+
+## Answer 3
+Q3. Trivariate analysis. You should find that three of the variables are quite strongly related, while the other variable is more weakly related. Draw a scatterplot of the two most strongly correlated variables. Then color the points according to the weakly related variable (e.g. make the points where the weakly related variable is above average one color, and the weakly related variable is below average another color.) What does this tell you that was not obvious from the bivariate analysis?
+
+The two most strongly related pairs were Religion - Birthplace 0.806. And the weakly related variable was language. The mean value of standardized scores for the weakly related variable is 2.142857e-10. On an average the standardized scores of the birthplace are slightly higher than that calculated for religion. 
+
+The trivariate analysis shows that 'teal' colored points on the scatter plot are the ones below average on the standardized language score. while the 'red' colored points on the scatter plot are the ones above average on the standardized scores. From the plot we can see that the points cannot be linearly seperated.
+
+Another observation is that most of the countries which score below average in language tend to score higher in birthplace than in religion. However for countries which score above average in language tend to score higher in religion than in birthplace. We can also observe Given the size of the data we cannot be completely sure of our inference
+
+
+```{r echo=FALSE}
+meanWeak <- mean(prcSurvey$Language)
+
+meanRel <- mean(prcSurvey$Religion)
+
+meanBirth <- mean(prcSurvey$Birthplace)
+
+language = rep(NA, nrow(prcSurvey))
+language[prcSurvey$Language > meanWeak] = "Above Average"
+language[prcSurvey$Language <= meanWeak] = "Below Average"
+prcSurvey2 = data.frame(prcSurvey, language)
+
+ggplot(prcSurvey2, aes(x=Birthplace, y=Religion, color=language)) +
+  geom_point() + coord_fixed() +
+  labs(title = "Scatter plot of Birthplace and Religion, colored by language")
+
+ggplot(prcSurvey2, aes(x=Birthplace, y=Religion)) + 
+  geom_point(aes(color=language)) + 
+  geom_hline(aes(yintercept=meanRel)) +
+  geom_vline(aes(xintercept=meanBirth)) +
+  geom_smooth(method="lm",se=FALSE) + coord_fixed() +
+  labs(title = "Scatter plot to check the distribution of values with repect to thier means")
+```

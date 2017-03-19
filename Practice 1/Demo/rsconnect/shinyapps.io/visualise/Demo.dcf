@@ -1,0 +1,10 @@
+name: Demo
+title:
+account: visualise
+server: shinyapps.io
+appId: 151448
+bundleId: 681434
+url: https://visualise.shinyapps.io/Demo/
+when: 1484603240.59435
+asMultiple: FALSE
+asStatic: FALSE

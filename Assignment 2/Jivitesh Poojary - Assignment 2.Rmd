@@ -1,0 +1,76 @@
+---
+title: "EDA - Assignment2"
+author: "Jivitesh Poojary"
+date: "January 23, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Answer 1
+
+Q1. After reading the data into R, use gather() to convert it to "long form". (You don't need to write anything up for the question, just give the code.)
+
+Code Provided.
+
+```{r echo=FALSE}
+
+library(dplyr)
+library(lattice)
+library(ggplot2)
+library(tidyr)
+
+pennVote <- read.table("F:/Data/pennsylvania.txt", header=TRUE)
+pennVote.long = pennVote %>% gather(Candidate, Votes, Obama:Clinton)
+pennVote.long
+```
+
+\newpage
+
+## Answer 2
+
+Q2. Use ggplot() to reproduce this normal QQ plot of the log_10 transformed data, and explain what it tells you:
+
+The log transformation changes the skewness to a more symmetric distribution rendering a simplified structure. The two plots are similar in distribution. The plots obtained do not follow a normal distribution. This is because there is slight bump in the distribution around the -1 standard deviation value on the plot.
+
+From the density plots of the two distributions we can confirm that the plots are skewed to the right.
+
+```{r echo=FALSE}
+pennVote.long.log = log10(pennVote.long$Votes)
+ggplot(pennVote.long, aes(sample=pennVote.long.log)) +
+  stat_qq() +
+  facet_grid(~Candidate)
+
+ggplot(pennVote.long, aes(x=pennVote.long.log)) +
+  geom_density() +
+  facet_grid(~Candidate)
+```
+
+\newpage
+
+## Answer 3
+Q3. Does it look like the relationship between Clinton's vote and Obama's vote is (i) additive, (ii) multiplicative, or (iii) more complicated? Justify your answer. (You'll need to draw further graphs to answer this question; include one or two of them in your answer.)
+
+Since the data is highly skewed, log tranformation (with base 10) was performed on the data. The base 10 was choosen in this case as the maximum of votes per county per candidate is in the hundreds of thousands. The Tukey Mean difference was plotted for the original data as well as for the log transformed data. The first plot is of the original data while the second plot is for the log transformed data. The points on the plots are not spread randomly. If there were randomly distributed we would got some evidence of additive relationship in the first plot and multiplicative relationship in the second.
+
+Since the points have a pattern associated with their positions. We have found no evidence of additive or multiplicative relationship. Hence we can safely say that something more complicated is being happening in this case.
+
+```{r echo=FALSE}
+vote = pennVote.long$Votes
+obama.clinton = pennVote.long$Candidate
+
+Obama.times = sort(vote[obama.clinton=="Obama"])
+Clinton.times = sort(vote[obama.clinton=="Clinton"])
+Obama.Clinton.qq = as.data.frame(qqplot(Obama.times, Clinton.times, plot.it=FALSE))
+
+Obama.times.log = sort(log10(vote[obama.clinton=="Obama"]))
+Clinton.times.log = sort(log10(vote[obama.clinton=="Clinton"]))
+Obama.Clinton.qq.log = as.data.frame(qqplot(Obama.times.log, Clinton.times.log, plot.it=FALSE))
+
+ggplot(Obama.Clinton.qq, aes((x+y)/2, y-x)) + geom_point() +
+  geom_abline(slope=0) + xlab("Mean (Votes)") + ylab("Difference (Votes)")
+ggplot(Obama.Clinton.qq.log, aes((x+y)/2, y-x)) + geom_point() +
+  geom_abline(slope=0) + xlab("Mean (log10 Votes)") + ylab("Difference (log10 Votes)")
+```

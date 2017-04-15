@@ -1,0 +1,125 @@
+---
+title: "EDA - Assignment 7"
+author: "Jivitesh Poojary"
+date: "March 22, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Answer 1
+
+Q1. Plot the data to show the location of Curry's shots using color to distinguish between made and missed shots, similarly to the picture below. (You don't have to include the picture of the court unless you want to show off.) NB: It should use coord_fixed() since the units are the same for both axes.
+
+ANSWER:
+
+- Please find the plot below
+
+```{r echo=FALSE}
+library(ggplot2)
+
+curry <- read.csv("basketball.csv", header = TRUE)
+ggplot(curry, aes(x= LOC_X,y = LOC_Y, color = EVENT_TYPE)) + 
+  geom_point(alpha = 0.5) + 
+  coord_fixed()
+
+```
+
+\newpage
+
+## Answer 2
+
+Q2. Fit a logistic regression to predict whether the shot is made, using the single predictor SHOT_DISTANCE. Draw an appropriate ggplot of the fitted curve and write an equation for the fit.
+
+ANSWER:
+
+ - The Logistic Regression model is fitted using glm function in R.
+ 
+ - The plot below shows the blue line showing the line for model of logistic regression while the orange curve shows the fitted values for loess model
+ 
+ - The equation of the fitted value is : Logit(Probability of SHOT) = 0.54508 - 0.03045(SHOT_DISTANCE)
+
+```{r }
+curry.logit = glm(SHOT_MADE_FLAG ~ SHOT_DISTANCE, family = binomial, data = curry)
+summary(curry.logit)
+```
+
+```{r , echo=FALSE,fig.width=10,fig.height=4}
+ggplot(curry, aes(x = SHOT_DISTANCE, y = SHOT_MADE_FLAG)) + 
+  geom_jitter(width = 0, height = 0.1) + 
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  ggtitle("Logistic Regression plot")
+
+```
+
+\newpage
+
+## Answer 3
+Q3. Plot the residuals in a way that shows where the logistic regression doesn't fit the data well. Describe in some detail how the model is inaccurate.
+
+ANSWER:
+
+ - From the fitted vs residual plot below we can see that the model does not fit well.
+ 
+ - The SHOT_DISTANCE vs residual plot also shows the model is not a good fit
+ 
+ - The loess fit on the data is curve which has a large deviation around the residual '0' line
+
+```{r , echo=FALSE,fig.width=10,fig.height=5.5}
+curry.model.df = curry
+curry.model.df$.fitted = fitted.values(curry.logit)
+curry.model.df$.resid = residuals(curry.logit, type = "response")
+
+ggplot(curry.model.df, aes(x = .fitted, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess",method.args = list(degree = 1)) +
+  ggtitle("Fitted vs Residual plot")
+
+ggplot(curry.model.df, aes(x = SHOT_DISTANCE, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) +
+  ggtitle("SHOT_DISTANCE vs Residual plot")
+
+```
+
+\newpage
+
+## Answer 4
+Q4. Fit a better model. You could try a different functional form or a model with more predictors (as long as you use the predictors sensibly.) Your model doesn't have to be perfect, just better. Draw a graph that shows how your model differs from the simple logistic regression, and convince us that your model is better.
+
+ANSWER:
+
+ - This is a much better model because the Residual deviance residuces significantly compared to other models, the decrease is from 2171.0 to 2168.4. This is significant when we compare the Residual deviance of 2167.2 for the most complicated model having three way interaction. Thus along with an improved predictability the model is also simple to understand
+ 
+ - Another reason we may select this model is because only for this model the AIC value decreases compared to the most basic model. We have seen an increase in the AIC value for all other models.
+ 
+ - We have also seen the p-values for the variables to have an idea of their significance.
+ 
+ - Similarly, Another reason why this model is better than the first model is because the deviance values for this model are lower. Though this is not a great improvement but it is an improvement none the less.
+ 
+ - We have drawn some plots comparing the residuals with variables. There is no significant improvement in the residuals vs SHOT_ DISTANCE curve. It looks like the plot drawn earlier. The residuals vs LOC_X plot shows that the fitted line almost overlaps with the residual = '0' line which subtatiates the goodness of fit for the model.
+
+```{r }
+curry.logit2 = glm(SHOT_MADE_FLAG ~ SHOT_DISTANCE + LOC_X , 
+                   family = binomial, data = curry)
+summary(curry.logit2)
+```
+
+```{r , echo=FALSE,fig.width=10,fig.height=5}
+curry.model.df2 = curry
+curry.model.df2$.fitted = fitted.values(curry.logit2)
+curry.model.df2$.resid = residuals(curry.logit2, type = "response")
+
+ggplot(curry.model.df2, aes(x = SHOT_DISTANCE, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess",method.args = list(degree = 1)) +
+  ggtitle("SHOT_DISTANCE vs Residual plot")
+
+ggplot(curry.model.df2, aes(x = LOC_X, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess",method.args = list(degree = 1)) +
+  ggtitle("LOC_X vs Residual plot")
+
+```
